@@ -6,6 +6,14 @@ import 'package:white_music/models/playlist_provider.dart';
 class PlaySongPage extends StatelessWidget {
   const PlaySongPage({super.key});
 
+  //convert duration into min:sec
+  String formetTime(Duration duration){
+    String twoDigitSeconds = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
+    String formattedTime = '${duration.inMinutes} : $twoDigitSeconds';
+
+    return formattedTime;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<PlaylistProvider>(
@@ -64,15 +72,15 @@ class PlaySongPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 25),
                 //song duration control
-                const Padding(
+                Padding(
                   padding: EdgeInsets.symmetric(horizontal: 25),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('0:00'),
+                      Text(formetTime(value.currentDuration)),
                       Icon(Icons.shuffle),
                       Icon(Icons.repeat),
-                      Text('0:00'),
+                      Text(formetTime(value.totalDuration)),
                     ],
                   ),
                 ),
@@ -82,28 +90,53 @@ class PlaySongPage extends StatelessWidget {
                     thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6)
                   ),
                   child: Slider(
-                    value: 50,
+                    value: value.currentDuration.inSeconds.toDouble(),
                     activeColor: Colors.deepPurple.shade500,
                     min: 0,
-                    max: 100,
+                    max: value.totalDuration.inSeconds.toDouble(),
                     onChanged: (value) {
-                      
+                      //durating the user when sliding around
+                    },
+                    onChangeEnd: (double double) {
+                      //sliding has finished, go to that position in song duration
+                      value.seekToSpecific(Duration(seconds: double.toInt()));
                     },
                   ),
                 ),
                 const SizedBox(height: 25),
                 //playback control
-                const Row(
+                Row(
 
                   children: [
                     //skip previous
-                    Expanded(child: MorphicBox(child: Icon(Icons.skip_previous, size: 28,))),
-                    SizedBox(width: 16),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: value.playPrevious,
+                        child: const MorphicBox(
+                          child: Icon(Icons.skip_previous, size: 28,)
+                        )
+                      )
+                    ),
+                    const SizedBox(width: 16),
                     //play pause 
-                    Expanded(flex: 2, child: MorphicBox(child: Icon(Icons.play_arrow, size: 28,))),
-                    SizedBox(width: 16),
+                    Expanded(flex: 2, 
+                      child: GestureDetector(
+                        onTap: value.pauseOrResume,
+                        child: MorphicBox(
+                            child: Icon(value.isPlaying ? Icons.pause : Icons.play_arrow, size: 28,)
+                          )
+                      )
+                    ),
+                    const SizedBox(width: 16),
                     //skip forward
-                    Expanded(child: MorphicBox(child: Icon(Icons.skip_next, size: 28,))),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: value.playNext,
+                        child: const MorphicBox(
+                          child: Icon(Icons.skip_next, size: 28,)
+                        )
+                      )
+                    ),
                   ],
                 )
 
